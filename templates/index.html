@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Tool MVP</title>
+    <style>
+        body {
+            display: flex;
+            font-family: Arial, sans-serif;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #f1f1f1;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-x: hidden;
+            padding-top: 20px;
+        }
+        .sidebar a {
+            padding: 10px 16px;
+            text-decoration: none;
+            font-size: 20px;
+            color: black;
+            display: block;
+        }
+        .sidebar a:hover {
+            background-color: #555;
+            color: white;
+        }
+        .content {
+            margin-left: 220px;
+            padding: 20px;
+        }
+        .toggle-button {
+            cursor: pointer;
+        }
+        .folder {
+            cursor: pointer;
+            background-color: #f1f1f1;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .folder-content {
+            display: none;
+            padding-left: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <a href="#ask_data">Ask Data</a>
+        <div class="folder" onclick="toggleStoredData()">Stored Data</div>
+        <div class="folder-content" id="stored_data">
+            <a href="#view_stored_data">View Stored Data</a>
+        </div>
+        <a href="#predict">Predict</a>
+        <a href="#visualize">Visualize</a>
+        <a href="#profile">Profile</a>
+        <a href="#settings">Settings</a>
+    </div>
+
+    <!-- Main content -->
+    <div class="content">
+        <h1>Welcome to the Data Tool MVP</h1>
+
+        <!-- Form to ask for data -->
+        <div id="ask_data">
+            <form action="/get_data" method="post">
+                <label for="symbol">Symbol:</label>
+                <input type="text" id="symbol" name="symbol">
+                <label for="data_type">Data Type:</label>
+                <select id="data_type" name="data_type">
+                    <option value="TIME_SERIES_DAILY">Daily Time Series</option>
+                    <!-- Add other data types as needed -->
+                </select>
+                <button type="submit">Get Data</button>
+            </form>
+        </div>
+
+        <!-- Stored Data -->
+        <div id="stored_data_content" style="margin-top: 20px; display: none;">
+            <h2>Stored Data</h2>
+            <div id="stored_data_table"></div>
+        </div>
+
+        <!-- Predict -->
+        <div id="predict" style="display:none;">
+            <h2>Predict</h2>
+            <div id="prediction_results"></div>
+        </div>
+
+        <!-- Visualize -->
+        <div id="visualize" style="display:none;">
+            <h2>Visualize</h2>
+            <div id="visualization_chart"></div>
+        </div>
+
+        <!-- Profile -->
+        <div id="profile" style="display:none;">
+            <h2>Profile</h2>
+            <p>Here you can view and update your profile information.</p>
+            <button class="toggle-button" onclick="toggleProfile()">Close Profile</button>
+            <!-- Add profile details and form if needed -->
+        </div>
+
+        <!-- Settings -->
+        <div id="settings" style="display:none;">
+            <h2>Settings</h2>
+            <p>Here you can manage application settings.</p>
+            <!-- Add settings options and form if needed -->
+        </div>
+    </div>
+
+    <script>
+        // Example data for demonstration
+        var storedData = [
+            { date: '2024-07-01', closePrice: 100 },
+            { date: '2024-07-02', closePrice: 102 },
+            { date: '2024-07-03', closePrice: 105 }
+        ];
+
+        // Function to display stored data in a table
+        function displayStoredData(data) {
+            var tableHtml = '<table><thead><tr><th>Date</th><th>Close Price</th></tr></thead><tbody>';
+            data.forEach(item => {
+                tableHtml += `<tr><td>${item.date}</td><td>${item.closePrice}</td></tr>`;
+            });
+            tableHtml += '</tbody></table>';
+            document.getElementById('stored_data_table').innerHTML = tableHtml;
+        }
+
+        // Function to toggle stored data folder
+        function toggleStoredData() {
+            var storedDataContent = document.getElementById('stored_data_content');
+            if (storedDataContent.style.display === 'none') {
+                storedDataContent.style.display = 'block';
+                displayStoredData(storedData); // Display stored data when folder is opened
+            } else {
+                storedDataContent.style.display = 'none';
+            }
+        }
+
+        // Function to toggle profile tab
+        function toggleProfile() {
+            var profileTab = document.getElementById('profile');
+            var profileButton = document.querySelector('.toggle-button');
+
+            if (profileTab.style.display === 'none') {
+                profileTab.style.display = 'block';
+                profileButton.textContent = 'Close Profile';
+            } else {
+                profileTab.style.display = 'none';
+                profileButton.textContent = 'Open Profile';
+            }
+        }
+
+        // Function to show content based on sidebar navigation
+        document.querySelectorAll('.sidebar a').forEach(item => {
+            item.addEventListener('click', function(event) {
+                event.preventDefault();
+                var target = this.getAttribute('href').substring(1);
+                showContent(target);
+            });
+        });
+
+        // Function to show content based on sidebar navigation
+        function showContent(target) {
+            document.querySelectorAll('.content > div').forEach(content => {
+                if (content.id === target) {
+                    content.style.display = 'block';
+                    if (target === 'stored_data') {
+                        displayStoredData(storedData); // Display stored data on demand
+                    }
+                } else {
+                    content.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

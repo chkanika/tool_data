@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Display</title>
+    <style>
+        table {
+            width: 50%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Data Display</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Close Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for date, close_price in data.items() %}
+            <tr>
+                <td>{{ date }}</td>
+                <td>{{ close_price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <a href="/">Go Back</a>
+</body>
+</html>
