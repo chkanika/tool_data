@@ -3,12 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Visualization</title>
+    <title>Visualize Page</title>
+    <!-- Include Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
-    <h1>Data Visualization</h1>
-    <img src="data:image/png;base64,{{ plot_url }}" alt="Data Visualization">
-    <br><br>
-    <a href="/">Go Back</a>
+    <h1>Visualize Page</h1>
+    <div id="visualization_chart"></div>
+
+    <script>
+        // Function to fetch data and visualize
+        function visualizeData() {
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ x: [1, 2, 3], y: [4, 5, 6] }),  // Replace with actual data
+            })
+            .then(response => response.json())
+            .then(data => {
+                var x_values = data.map(item => item.x);
+                var y_values = data.map(item => item.y);
+                var prediction_values = data.map(item => item.prediction);
+                
+                var trace1 = {
+                    x: x_values,
+                    y: y_values,
+                    mode: 'markers',
+                    type: 'scatter',
+                    name: 'Actual Data'
+                };
+                
+                var trace2 = {
+                    x: x_values,
+                    y: prediction_values,
+                    mode: 'lines',
+                    type: 'scatter',
+                    name: 'Prediction'
+                };
+                
+                var layout = {
+                    title: 'Data Visualization with Prediction',
+                    xaxis: {
+                        title: 'X Axis'
+                    },
+                    yaxis: {
+                        title: 'Y Axis'
+                    }
+                };
+                
+                var plotData = [trace1, trace2];
+                Plotly.newPlot('visualization_chart', plotData, layout);
+            })
+            .catch(error => console.error('Error visualizing data:', error));
+        }
+
+        // Call visualizeData() function when page loads
+        visualizeData();
+    </script>
 </body>
 </html>

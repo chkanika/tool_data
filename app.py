@@ -9,20 +9,20 @@ from sklearn.linear_model import LinearRegression
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Change this to a secure secret key
 
-# Function to fetch data from Alpha Vantage API
-def fetch_data(symbol, data_type):
-    api_key = 'https://www.alphavantage.co' 
+# # Function to fetch data from Alpha Vantage API
+# def fetch_data(symbol, data_type):
+#     api_key = 'https://fred.stlouisfed.org/' 
     
-from flask import Flask, request, jsonify, render_template, session
-import requests
-import pandas as pd
-import matplotlib.pyplot as plt
-import io
-import base64
-from sklearn.linear_model import LinearRegression
+# from flask import Flask, request, jsonify, render_template, session
+# import requests
+# import pandas as pd
+# import matplotlib.pyplot as plt
+# import io
+# import base64
+# from sklearn.linear_model import LinearRegression
 
-app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Change this to a secure secret key
+# app = Flask(__name__)
+# app.secret_key = 'your_secret_key'  # Change this to a secure secret key
 
 # Function to fetch data from Alpha Vantage API
 def fetch_data(symbol, data_type):
@@ -65,7 +65,7 @@ def store_data():
 # Route to predict based on JSON data
 @app.route('/predict', methods=['POST'])
 def predict():
-    data = request.json
+    data = request.json  # Assuming JSON data is sent from frontend
     df = pd.DataFrame(data)
     X = df[['x']].values
     y = df['y'].values
@@ -78,20 +78,41 @@ def predict():
 @app.route('/visualize', methods=['POST'])
 def visualize():
     data = request.json
-    df = pd.DataFrame(data)
-    plt.figure(figsize=(10, 5))
-    plt.plot(df['x'], df['y'], marker='o')
-    plt.title('Data Visualization')
-    plt.xlabel('x')
-    plt.ylabel('y')
     
-    img = io.BytesIO()
-    plt.savefig(img, format='png')
-    img.seek(0)
-    plot_url = base64.b64encode(img.getvalue()).decode('utf8')
-    plt.close()
+    # Example visualization logic (using Plotly)
+    x_values = [item['x'] for item in data]
+    y_values = [item['y'] for item in data]
+    prediction_values = [item['prediction'] for item in data]
     
-    return render_template('visualize.html', plot_url=plot_url)
+    trace1 = {
+        'x': x_values,
+        'y': y_values,
+        'mode': 'markers',
+        'type': 'scatter',
+        'name': 'Actual Data'
+    }
+    
+    trace2 = {
+        'x': x_values,
+        'y': prediction_values,
+        'mode': 'lines',
+        'type': 'scatter',
+        'name': 'Prediction'
+    }
+    
+    layout = {
+        'title': 'Data Visualization with Prediction',
+        'xaxis': {
+            'title': 'X Axis'
+        },
+        'yaxis': {
+            'title': 'Y Axis'
+        }
+    }
+    
+    return jsonify({'plot_data': [trace1, trace2], 'layout': layout})
+
+
 
 @app.route('/')
 def index():
