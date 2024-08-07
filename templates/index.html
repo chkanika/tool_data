@@ -3,21 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Tool MVP</title>
+    <title>nestt</title>
     <style>
         body {
             display: flex;
             font-family: Arial, sans-serif;
+            margin: 0;
+            height: 100vh;
         }
         .sidebar {
             width: 200px;
             background-color: #f1f1f1;
-            height: 100vh;
+            height: 100%;
             position: fixed;
             left: 0;
             top: 0;
             overflow-x: hidden;
             padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
         }
         .sidebar a {
             padding: 10px 16px;
@@ -30,13 +33,11 @@
             background-color: #555;
             color: white;
         }
-        .content {
-            margin-left: 220px;
+        .main-content {
+            margin-left: 200px;
+            width: calc(100% - 200px);
             padding: 20px;
-            width: 100%;
-        }
-        .toggle-button {
-            cursor: pointer;
+            overflow-y: auto;
         }
         .folder {
             cursor: pointer;
@@ -82,21 +83,27 @@
             color: #999;
         }
         .chart-container {
-            width: 80%; /* Adjust as needed */
-            margin: auto; /* Center the chart */
+            width: 80%;
+            margin: auto;
+        }
+        #visualization_chart {
+            width: 100%;
+            height: 500px;
         }
     </style>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
     <!-- Sidebar -->
     <div class="sidebar">
-        <a href="#ask_data">Ask Data</a>
+        <a href="#ask_data" onclick="showSection('ask_data')">Ask Data</a>
         <div class="folder" onclick="toggleStoredData()">Stored Data</div>
         <div class="folder-content" id="stored_data">
             <a href="#view_stored_data" onclick="viewStoredData()">View Stored Data</a>
         </div>
-        <a href="#predict" onclick="predictData()">Predict</a>
-        <a href="#visualize" onclick="visualizeData()">Visualize</a>
+        <a href="#predict" onclick="showSection('predict')">Predict</a>
+        <a href="#visualize" onclick="showSection('visualize')">Visualize</a>
+        <a href="#interpret" onclick="showSection('interpret')">Interpret</a>
         <a href="#messages" onclick="toggleMessages()">Messages</a>
         <div class="folder-content" id="messages_content" style="display: none;">
             <!-- Messages will be displayed dynamically -->
@@ -106,7 +113,7 @@
     </div>
 
     <!-- Main content -->
-    <div class="content">
+    <div class="main-content">
         <h1>Welcome to the Data Tool MVP</h1>
 
         <!-- Ask Data Form and Display -->
@@ -137,6 +144,12 @@
             <div id="stored_data_table"></div>
         </div>
 
+        <!-- Analyze -->
+        <div id="analyze" style="display:none;">
+            <h2>Analyze Data</h2>
+            <div id="analysis_results"></div>
+        </div>
+
         <!-- Predict -->
         <div id="predict" style="display:none;">
             <h2>Predict</h2>
@@ -149,12 +162,19 @@
             <div id="visualization_chart"></div>
         </div>
 
+        <!-- Interpret -->
+        <div id="interpret" style="display:none;">
+            <h2>Interpret Data</h2>
+            <textarea id="interpret_input" rows="5" cols="50" placeholder="Enter your data or question here"></textarea>
+            <button onclick="interpretData()">Interpret</button>
+            <div id="interpretation_result"></div>
+        </div>
+
         <!-- Messages -->
         <div id="messages_content" style="display:none;">
             <h2>Messages</h2>
             <!-- Messages will be displayed dynamically -->
         </div>
-
     </div>
 
     <script>
@@ -201,9 +221,18 @@
             .catch(error => console.error('Error storing data:', error));
         }
 
+        function analyzeData() {
+            fetch('/analyze', { method: 'POST' })
+                .then(response => response.json())
+                .then(analysis => {
+                    var analysisHtml = '<p>Analysis Results:</p><pre>' + JSON.stringify(analysis, null, 2) + '</pre>';
+                    document.getElementById('analysis_results').innerHTML = analysisHtml;
+                    document.getElementById('analyze').style.display = 'block';
+                })
+                .catch(error => console.error('Error analyzing data:', error));
+        }
+
         function predictData() {
-            // Implement prediction logic
-            // Example:
             fetch('/predict', {
                 method: 'POST',
                 headers: {
@@ -212,8 +241,8 @@
                 body: JSON.stringify({ x: [1, 2, 3], y: [4, 5, 6] }),  // Replace with actual data
             })
             .then(response => response.json())
-            .then(data => {
-                var predictionHtml = '<p>Prediction Results:</p><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            .then(prediction => {
+                var predictionHtml = '<p>Prediction Results:</p><pre>' + JSON.stringify(prediction, null, 2) + '</pre>';
                 document.getElementById('prediction_results').innerHTML = predictionHtml;
                 document.getElementById('predict').style.display = 'block';
             })
@@ -221,80 +250,72 @@
         }
 
         function visualizeData() {
-            // Implement visualization logic
-            // Example:
-            fetch('/predict', {
+            fetch('/visualize', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    var trace1 = {
+                        x: data.x,
+                        y: data.y,
+                        type: 'scatter'
+                    };
+                    var layout = {
+                        title: 'Data Visualization',
+                        xaxis: { title: 'X Axis' },
+                        yaxis: { title: 'Y Axis' }
+                    };
+                    Plotly.newPlot('visualization_chart', [trace1], layout);
+                    document.getElementById('visualize').style.display = 'block';
+                })
+                .catch(error => console.error('Error visualizing data:', error));
+        }
+
+        function interpretData() {
+            var input = document.getElementById('interpret_input').value;
+            fetch('/interpret', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ x: [1, 2, 3], y: [4, 5, 6] }),  // Replace with actual data
+                body: JSON.stringify({ input: input }),
             })
             .then(response => response.json())
-            .then(data => {
-                var x_values = data.map(item => item.x);
-                var y_values = data.map(item => item.y);
-                var prediction_values = data.map(item => item.prediction);
-                
-                var trace1 = {
-                    x: x_values,
-                    y: y_values,
-                    mode: 'markers',
-                    type: 'scatter',
-                    name: 'Actual Data'
-                };
-                
-                var trace2 = {
-                    x: x_values,
-                    y: prediction_values,
-                    mode: 'lines',
-                    type: 'scatter',
-                    name: 'Prediction'
-                };
-                
-                var layout = {
-                    title: 'Data Visualization with Prediction',
-                    xaxis: {
-                        title: 'X Axis'
-                    },
-                    yaxis: {
-                        title: 'Y Axis'
-                    }
-                };
-                
-                var plotData = [trace1, trace2];
-                Plotly.newPlot('visualization_chart', plotData, layout);
-                document.getElementById('visualize').style.display = 'block';
+            .then(result => {
+                document.getElementById('interpretation_result').innerHTML = '<p>Interpretation:</p><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+                document.getElementById('interpret').style.display = 'block';
             })
-            .catch(error => console.error('Error visualizing data:', error));
+            .catch(error => console.error('Error interpreting data:', error));
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.main-content > div').forEach(div => {
+                div.style.display = 'none';
+            });
+            document.getElementById(sectionId).style.display = 'block';
         }
 
         function toggleStoredData() {
-            var storedDataContent = document.getElementById('stored_data_content');
-            storedDataContent.style.display = storedDataContent.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function viewStoredData() {
-            fetch('/get_stored_data')
-            .then(response => response.json())
-            .then(data => {
-                var tableHtml = '<table><thead><tr><th>Date</th><th>Close Price</th></tr></thead><tbody>';
-                data.forEach(item => {
-                    tableHtml += '<tr><td>' + item.Date + '</td><td>' + item['Close Price'] + '</td></tr>';
-                });
-                tableHtml += '</tbody></table>';
-                document.getElementById('stored_data_table').innerHTML = tableHtml;
-                document.getElementById('stored_data_content').style.display = 'block';
-            })
-            .catch(error => console.error('Error fetching stored data:', error));
+            var content = document.getElementById('stored_data');
+            content.style.display = content.style.display === 'block' ? 'none' : 'block';
         }
 
         function toggleMessages() {
-            var messagesContent = document.getElementById('messages_content');
-            messagesContent.style.display = messagesContent.style.display === 'block' ? 'none' : 'block';
+            var messages = document.getElementById('messages_content');
+            messages.style.display = messages.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function viewStoredData() {
+            fetch('/view_stored_data')
+                .then(response => response.json())
+                .then(data => {
+                    var storedDataHtml = '<table><thead><tr><th>Data</th></tr></thead><tbody>';
+                    data.forEach(item => {
+                        storedDataHtml += '<tr><td>' + JSON.stringify(item) + '</td></tr>';
+                    });
+                    storedDataHtml += '</tbody></table>';
+                    document.getElementById('stored_data_table').innerHTML = storedDataHtml;
+                })
+                .catch(error => console.error('Error viewing stored data:', error));
         }
     </script>
-    <!-- Plotly.js -->
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </body>
 </html>

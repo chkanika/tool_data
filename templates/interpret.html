@@ -1,0 +1,35 @@
+<!-- In the sidebar -->
+<a href="#interpret" onclick="showInterpretSection()">Interpret</a>
+
+<!-- In the main content area -->
+<div id="interpret" style="display:none;">
+    <h2>Interpret Data</h2>
+    <textarea id="interpret_input" rows="5" cols="50" placeholder="Enter your data or question here"></textarea>
+    <button onclick="interpretData()">Interpret</button>
+    <div id="interpretation_result"></div>
+</div>
+
+<!-- Add this to the script section -->
+<script>
+    // ... (existing code)
+
+    function showInterpretSection() {
+        document.getElementById('interpret').style.display = 'block';
+    }
+
+    function interpretData() {
+        var input = document.getElementById('interpret_input').value;
+        fetch('/interpret', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ input: input }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('interpretation_result').innerHTML = '<p>' + data.interpretation + '</p>';
+        })
+        .catch(error => console.error('Error interpreting data:', error));
+    }
+</script>
