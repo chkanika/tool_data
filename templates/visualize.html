@@ -14,47 +14,36 @@
     <script>
         // Function to fetch data and visualize
         function visualizeData() {
-            fetch('/predict', {
+            fetch('/visualize', {  // Changed to the correct route
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ x: [1, 2, 3], y: [4, 5, 6] }),  // Replace with actual data
+                body: JSON.stringify({}),  // Send an empty object if no data is needed in the request body
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
-                var x_values = data.map(item => item.x);
-                var y_values = data.map(item => item.y);
-                var prediction_values = data.map(item => item.prediction);
-                
-                var trace1 = {
-                    x: x_values,
-                    y: y_values,
-                    mode: 'markers',
-                    type: 'scatter',
-                    name: 'Actual Data'
-                };
-                
-                var trace2 = {
-                    x: x_values,
-                    y: prediction_values,
-                    mode: 'lines',
-                    type: 'scatter',
-                    name: 'Prediction'
-                };
-                
-                var layout = {
-                    title: 'Data Visualization with Prediction',
-                    xaxis: {
-                        title: 'X Axis'
-                    },
-                    yaxis: {
-                        title: 'Y Axis'
-                    }
-                };
-                
-                var plotData = [trace1, trace2];
-                Plotly.newPlot('visualization_chart', plotData, layout);
+                console.log('Received data:', data);  // Debugging statement
+
+                if (data.plot_data && data.layout) {
+                    var traces = data.plot_data.map(trace => ({
+                        x: trace.x,
+                        y: trace.y,
+                        mode: trace.mode,
+                        type: trace.type,
+                        name: trace.name
+                    }));
+                    var layout = data.layout;
+
+                    Plotly.newPlot('visualization_chart', traces, layout);
+                } else {
+                    console.error('Invalid data format for visualization:', data);
+                }
             })
             .catch(error => console.error('Error visualizing data:', error));
         }

@@ -90,6 +90,22 @@
             width: 100%;
             height: 500px;
         }
+        .whiteboard {
+            border: 1px solid #ddd;
+            width: 100%;
+            height: 400px;
+            background-color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        .whiteboard-drawing {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
     </style>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
@@ -104,10 +120,8 @@
         <a href="#predict" onclick="showSection('predict')">Predict</a>
         <a href="#visualize" onclick="showSection('visualize')">Visualize</a>
         <a href="#interpret" onclick="showSection('interpret')">Interpret</a>
-        <a href="#messages" onclick="toggleMessages()">Messages</a>
-        <div class="folder-content" id="messages_content" style="display: none;">
-            <!-- Messages will be displayed dynamically -->
-        </div>
+        <a href="#messages" onclick="showSection('messages_content')">Messages</a>
+        <a href="#whiteboard" onclick="showSection('whiteboard_content')">Whiteboard</a>
         <a href="#profile">Profile</a>
         <a href="#settings">Settings</a>
     </div>
@@ -171,9 +185,17 @@
         </div>
 
         <!-- Messages -->
-        <div id="messages_content" style="display:none;">
+        <div id="messages_content">
             <h2>Messages</h2>
             <!-- Messages will be displayed dynamically -->
+        </div>
+
+        <!-- Whiteboard -->
+        <div id="whiteboard_content" style="display:none;">
+            <h2>Whiteboard</h2>
+            <div id="whiteboard" class="whiteboard">
+                <canvas id="whiteboardCanvas" class="whiteboard-drawing"></canvas>
+            </div>
         </div>
     </div>
 
@@ -204,7 +226,7 @@
             })
             .catch(error => console.error('Error fetching data:', error));
         }
-
+    
         function storeData() {
             var storedData = document.getElementById('stored_data_input').value;
             fetch('/store_data', {
@@ -220,53 +242,40 @@
             })
             .catch(error => console.error('Error storing data:', error));
         }
-
-        function analyzeData() {
-            fetch('/analyze', { method: 'POST' })
-                .then(response => response.json())
-                .then(analysis => {
-                    var analysisHtml = '<p>Analysis Results:</p><pre>' + JSON.stringify(analysis, null, 2) + '</pre>';
-                    document.getElementById('analysis_results').innerHTML = analysisHtml;
-                    document.getElementById('analyze').style.display = 'block';
-                })
-                .catch(error => console.error('Error analyzing data:', error));
-        }
-
+    
         function predictData() {
+            // Example data
             fetch('/predict', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: JSON.stringify({ x: [1, 2, 3], y: [4, 5, 6] }),  // Replace with actual data
+                body: 'model=example_model', // Replace with actual model/data
             })
             .then(response => response.json())
-            .then(prediction => {
-                var predictionHtml = '<p>Prediction Results:</p><pre>' + JSON.stringify(prediction, null, 2) + '</pre>';
-                document.getElementById('prediction_results').innerHTML = predictionHtml;
-                document.getElementById('predict').style.display = 'block';
+            .then(data => {
+                var result = 'Predicted Value: ' + data.prediction;
+                document.getElementById('prediction_results').innerHTML = result;
             })
             .catch(error => console.error('Error predicting data:', error));
         }
-
+    
         function visualizeData() {
-            fetch('/visualize', { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    var trace1 = {
-                        x: data.x,
-                        y: data.y,
-                        type: 'scatter'
-                    };
-                    var layout = {
-                        title: 'Data Visualization',
-                        xaxis: { title: 'X Axis' },
-                        yaxis: { title: 'Y Axis' }
-                    };
-                    Plotly.newPlot('visualization_chart', [trace1], layout);
-                    document.getElementById('visualize').style.display = 'block';
-                })
-                .catch(error => console.error('Error visualizing data:', error));
+            var data = {
+                x: ['2021-01-01', '2021-01-02', '2021-01-03'],
+                y: [10, 15, 13],
+                type: 'scatter'
+            };
+            var layout = {
+                title: 'Sample Data Visualization',
+                xaxis: {
+                    title: 'Date'
+                },
+                yaxis: {
+                    title: 'Value'
+                }
+            };
+            Plotly.newPlot('visualization_chart', [data], layout);
         }
 
         function interpretData() {
@@ -274,48 +283,45 @@
             fetch('/interpret', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: JSON.stringify({ input: input }),
+                body: 'input=' + encodeURIComponent(input),
             })
             .then(response => response.json())
-            .then(result => {
-                document.getElementById('interpretation_result').innerHTML = '<p>Interpretation:</p><pre>' + JSON.stringify(result, null, 2) + '</pre>';
-                document.getElementById('interpret').style.display = 'block';
+            .then(data => {
+                document.getElementById('interpretation_result').innerText = data.interpretation;
             })
             .catch(error => console.error('Error interpreting data:', error));
         }
 
         function showSection(sectionId) {
-            document.querySelectorAll('.main-content > div').forEach(div => {
-                div.style.display = 'none';
+            var sections = ['ask_data', 'stored_data_content', 'predict', 'visualize', 'interpret', 'messages_content', 'whiteboard_content'];
+            sections.forEach(function(id) {
+                document.getElementById(id).style.display = id === sectionId ? 'block' : 'none';
             });
-            document.getElementById(sectionId).style.display = 'block';
         }
-
+        
         function toggleStoredData() {
-            var content = document.getElementById('stored_data');
-            content.style.display = content.style.display === 'block' ? 'none' : 'block';
+            var storedDataContent = document.getElementById('stored_data');
+            storedDataContent.style.display = storedDataContent.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        function drawOnWhiteboard(event) {
+            var canvas = document.getElementById('whiteboardCanvas');
+            var context = canvas.getContext('2d');
+            context.beginPath();
+            context.moveTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
+            context.lineTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
+            context.stroke();
         }
 
-        function toggleMessages() {
-            var messages = document.getElementById('messages_content');
-            messages.style.display = messages.style.display === 'block' ? 'none' : 'block';
-        }
+        document.getElementById('whiteboardCanvas').addEventListener('mousedown', function() {
+            document.getElementById('whiteboardCanvas').addEventListener('mousemove', drawOnWhiteboard);
+        });
 
-        function viewStoredData() {
-            fetch('/view_stored_data')
-                .then(response => response.json())
-                .then(data => {
-                    var storedDataHtml = '<table><thead><tr><th>Data</th></tr></thead><tbody>';
-                    data.forEach(item => {
-                        storedDataHtml += '<tr><td>' + JSON.stringify(item) + '</td></tr>';
-                    });
-                    storedDataHtml += '</tbody></table>';
-                    document.getElementById('stored_data_table').innerHTML = storedDataHtml;
-                })
-                .catch(error => console.error('Error viewing stored data:', error));
-        }
+        document.addEventListener('mouseup', function() {
+            document.getElementById('whiteboardCanvas').removeEventListener('mousemove', drawOnWhiteboard);
+        });
     </script>
 </body>
 </html>
