@@ -124,4 +124,4 @@ def index():
 #     emit('whiteboard_update', data, broadcast=True)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # app.run(debug=True)
